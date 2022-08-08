@@ -18,7 +18,6 @@ def relu(array: np.ndarray, derivative: bool=False) -> float:
         array = np.array(array)
 
     if derivative:
-        
         return apply_function_to_nparray(
             array, lambda value: 1. if value >=0 else 0.
         )
@@ -36,11 +35,9 @@ def tanh(array: np.ndarray, derivative: bool=False) -> np.ndarray:
 
 @set_repr('sigmoid')
 def sigmoid(array: np.ndarray, derivative: bool=False) -> np.ndarray:
+    
+    g = 1 / (1 + np.exp(-array)) 
+    
     if derivative:
-        return sigmoid_derivative(array)
-    return 1 / (1 + np.exp(-array))
-
-
-def sigmoid_derivative(array: np.ndarray) -> np.ndarray:
-    s = sigmoid(array)
-    return s * (1 - s)
+        g = g * (1 - g) 
+    return g
