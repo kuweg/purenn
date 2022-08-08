@@ -44,6 +44,7 @@ class WeightsLayer(Layer):
         self.activation = activation
         self._weights_init = Weights(weights_strategy)
         self.weights = self._weights_init(n_input_nodes, n_output_nodes)
+        self.bias = np.random.rand(n_input_nodes)
         self.input = None
         self.output = None
         
@@ -53,12 +54,11 @@ class WeightsLayer(Layer):
              input_data = input_data.weights
              
         self.input = input_data
-        self.output = self.activation(
-             np.dot(self.weights, input_data)
-         )
-        return self.output
+        self.z = np.dot(self.weights, input_data) + self.bias
+        self.a = self.activation(self.z)
+        return self.a
     
-    def backprob(self, error: np.ndarray, alpha: float = 0.01) -> np.ndarray:
+    def backward(self, error: np.ndarray, alpha: float = 0.01) -> np.ndarray:
     
         input_error = np.dot(self.weights.T, error)
         
