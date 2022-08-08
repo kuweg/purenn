@@ -44,7 +44,7 @@ def _extract_activation_functions(model: Model) -> list[Callable]:
 
 
 def _weights_layers_init(model: Model) -> list[tuple]:
-    nodes = [layer.n_nodes for layer in model.layers]
+    nodes = [model.input_shape[1]] + [layer.n_nodes for layer in model.layers]
     activations = _extract_activation_functions(model)
     weights_layers_shapes = _reversed_pairwise(nodes)
     weights_layers = [
@@ -57,8 +57,11 @@ def _weights_layers_init(model: Model) -> list[tuple]:
 
 class Sequential(Model):
     
-    def __init__(self, *args) -> None:
-        self.layers = [layer for layer in args]
+    def __init__(self,
+                 input_shape: tuple,
+                 layers: List[Layer]) -> None:
+        self.input_shape = input_shape
+        self.layers = [layer for layer in layers]
         self.weights = _weights_layers_init(self)
         
     def forward(self, input_data: np.ndarray) -> np.ndarray:
@@ -73,3 +76,19 @@ class Sequential(Model):
     
     def fit(self, X_train, Y_train, epochs):
         pass
+    
+    def info(self) -> None:
+        layers_type = [layer.__class__.__name__ for layer in self.layers]
+        print('model: Sequential')
+        print(
+            "\n".join(
+            [
+                layer_type + " | " + str(layer) 
+                for layer, layer_type
+                in zip(
+                    list(self.weights.__dict__.values())[:-1],
+                    layers_type
+                    )
+                ]
+            )
+        )

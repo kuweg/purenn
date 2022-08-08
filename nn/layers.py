@@ -44,9 +44,7 @@ class WeightsLayer(Layer):
         self.activation = activation
         self._weights_init = Weights(weights_strategy)
         self.weights = self._weights_init(n_input_nodes, n_output_nodes)
-        self.bias = np.random.rand(n_input_nodes)
-        self.input = None
-        self.output = None
+        self.bias = np.random.rand(n_input_nodes, 1)
         
     def forward(self, input_data: Union[Layer, np.ndarray]) -> np.ndarray:
          
@@ -70,7 +68,7 @@ class WeightsLayer(Layer):
         return dz
     
     def __repr__(self):
-        return "({},{}) : {}".format(self.n_input_nodes, self.n_output_nodes, self.activation)
+        return "({},{}) | {}".format(self.n_input_nodes, self.n_output_nodes, self.activation)
     
     __call__ = forward
     
