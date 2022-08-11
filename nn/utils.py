@@ -1,4 +1,3 @@
-import functools
 from typing import Any, Callable
 
 class rewrapper:
@@ -14,7 +13,7 @@ class rewrapper:
         return self._repr
     
 
-def set_repr(reprfunc: Callable) -> Callable:
+def set_repr(repr_name: str) -> Callable:
     def _wrap(func: Callable) -> rewrapper:
-        return rewrapper(reprfunc, func)
+        return rewrapper(repr_name, func)
     return _wrap

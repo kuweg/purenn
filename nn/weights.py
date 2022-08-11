@@ -8,14 +8,6 @@ def _shape_checking(*args) -> Number | tuple:
         return int(args[0])
     return tuple(map(int, args))
 
-
-def init_bias(*args) -> np.ndarray:
-    bias_shape = args[0]
-    if len(args) == 2:
-        bias_shape = args[1]
-    return np.random.rand(1, bias_shape)
-
-
 class Weights:
     
     def __init__(self, weights_strategy: str=None) -> None:
