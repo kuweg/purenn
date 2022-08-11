@@ -1,8 +1,6 @@
-from .activations import relu
-from .weights import Weights, init_bias
+from .weights import Weights
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 import numpy as np
 from typing import Callable, Union
 
@@ -17,14 +15,6 @@ class ConsctructionLayer(ABC):
     """Creating a structure of neural network at Model object."""
     def __init__(self, n_nodes: int) -> None:
         self.n_nodes = n_nodes
-
-
-class InputLayer(ConsctructionLayer):
-    pass    
-
-
-NO_ACTIVATION_LAYERS_LIST = [InputLayer]
-
 
 class Dense(ConsctructionLayer):
     
@@ -58,14 +48,18 @@ class WeightsLayer(Layer):
     
     def backward(self, error: np.ndarray, alpha: float = 0.01) -> np.ndarray:
     
-        input_error = np.dot(self.weights.T, error)
+        dz = self.activation(self.z, derivative=True) * error
+            
+        dw = np.dot(dz, self.input.T)
+        db = np.sum(dz, axis=1, keepdims=True)
+    
+        new_error = np.dot(self.weights.T, dz)
+        return new_error, dw, db
+    
+    def update_params(self, dw: np.ndarray, db: np.ndarray) -> None:
+        self.weights -= dw
+        self.bias -= db
         
-        dz = self.activation(input_error, derivative=True)
-        
-        weights_error = np.dot(self.input.T, dz)
-        self.weights -= (alpha * weights_error)
-        
-        return dz
     
     def __repr__(self):
         return "({},{}) | {}".format(self.n_input_nodes, self.n_output_nodes, self.activation)

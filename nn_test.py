@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from nn.model import Sequential
-from nn.layers import InputLayer, Dense, WeightsLayer
+from nn.layers import Dense
 from nn.activations import relu, tanh, apply_function_to_nparray, sigmoid
-from nn.losses import BinaryCrossEntropy, mean_squared_error
+from nn.loss import BinaryCrossEntropy, mean_squared_error
 
 # samples = make_classification(n_samples=100, n_features=2, n_redundant=0, n_informative=1, n_clusters_per_class=1, flip_y=-1)
 
