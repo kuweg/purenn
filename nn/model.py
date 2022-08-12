@@ -5,6 +5,7 @@ from typing import Callable, Iterable, List
 import numpy as np
 
 from nn.layers import Layer, WeightsLayer
+from nn.utils import reversed_pairwise
 
 
 WL_PREFIX = "wl{}"
@@ -23,35 +24,6 @@ class WeigthCore:
         for order, layer in enumerate(args):
             setattr(self, WL_PREFIX.format(order), layer)
         
-
-
-def _reversed_pairwise(sequence: Iterable) -> list[list]:
-    pairwise_sequence = list(pairwise(sequence))
-    reversed_pairwise_sequence = list(
-        map(
-            lambda pair: list(reversed(pair)),
-            pairwise_sequence
-            )
-        )
-    return reversed_pairwise_sequence
-
-
-def _extract_activation_functions(model: Model) -> list[Callable]:
-    activations = [layer.activation for layer in model.layers]
-    return activations
-
-
-def _weights_layers_init(model: Model) -> list[tuple]:
-    nodes = [model.input_shape[1]] + [layer.n_nodes for layer in model.layers]
-    activations = _extract_activation_functions(model)
-    weights_layers_shapes = _reversed_pairwise(nodes)
-    weights_layers = [
-            WeightsLayer(input_shape, output_shape, activation_fn)
-            for (input_shape, output_shape), activation_fn
-            in zip(weights_layers_shapes, activations)
-        ]
-    return WeigthCore(*weights_layers)
-    
     
 class Sequential(Model):
     
@@ -117,3 +89,20 @@ class Sequential(Model):
                 ]
             )
         )
+        
+        
+def _extract_activation_functions(model: Model) -> list[Callable]:
+    activations = [layer.activation for layer in model.layers]
+    return activations
+
+
+def _weights_layers_init(model: Model) -> list[tuple]:
+    nodes = [model.input_shape[1]] + [layer.n_nodes for layer in model.layers]
+    activations = _extract_activation_functions(model)
+    weights_layers_shapes = reversed_pairwise(nodes)
+    weights_layers = [
+            WeightsLayer(input_shape, output_shape, activation_fn)
+            for (input_shape, output_shape), activation_fn
+            in zip(weights_layers_shapes, activations)
+        ]
+    return WeigthCore(*weights_layers)

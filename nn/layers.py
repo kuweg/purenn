@@ -36,11 +36,7 @@ class WeightsLayer(Layer):
         self.weights = self._weights_init(n_input_nodes, n_output_nodes)
         self.bias = np.random.rand(n_input_nodes, 1)
         
-    def forward(self, input_data: Union[Layer, np.ndarray]) -> np.ndarray:
-         
-        if isinstance(input_data, Layer):
-             input_data = input_data.weights
-             
+    def forward(self, input_data: Union[Layer, np.ndarray]) -> np.ndarray:     
         self.input = input_data
         self.z = np.dot(self.weights, input_data) + self.bias
         self.a = self.activation(self.z)

@@ -4,19 +4,9 @@ import numpy as np
 from .utils import set_repr
 
 
-def apply_function_to_nparray(array: np.ndarray, fn: Callable) -> np.ndarray:
-    initial_shape = array.shape
-    mapped_array = np.array(
-        list(map(fn, array.flat))
-    )
-    return mapped_array.reshape(initial_shape)
-
-
 @set_repr('relu')
 def relu(array: np.ndarray, derivative: bool=False) -> float:
-    if not isinstance(array, np.ndarray):
-        array = np.array(array)
-
+    
     if derivative:
         return (array > 0) * 1.
     return np.maximum(array, 0.)
