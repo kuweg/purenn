@@ -6,14 +6,15 @@ from sklearn.model_selection import train_test_split
 import os
 
 
-TRAIN_PATH = 'train.csv'
-TEST_PATH = 'test.csv'
+TRAIN_PATH = os.getcwd() + '/mnist/train.csv'
+TEST_PATH = os.getcwd() + '/mnist/test.csv'
 
 def check_and_load(filepath: str) -> pd.DataFrame:
     if os.path.isfile(filepath):
         return pd.read_csv(filepath)
     else: 
-        raise FileExistsError('[!] Dataset source file does not exists.')
+        raise FileExistsError('[!] Dataset source file does not exists.\n', 
+                              'received: {}'.format(filepath))
     
 def split_data(data: pd.DataFrame, label_column: str) -> Tuple[np.ndarray, np.ndarray]:
     y = data[label_column].to_numpy()
