@@ -8,6 +8,10 @@ from nn.layers import Layer, WeightsLayer
 from nn.utils import reversed_pairwise
 
 
+class IncompleteModelError(Exception):
+    pass
+
+
 WL_PREFIX = "wl{}"
 
 
@@ -23,19 +27,50 @@ class WeigthCore:
     def __init__(self, *args: List[Layer]):
         for order, layer in enumerate(args):
             setattr(self, WL_PREFIX.format(order), layer)
-        
+            
+            
+def check_completeness(model) -> bool:
+        return all(model.__dict__.values())
     
+    
+def get_none_parameters(model) -> list[str]:
+    return [k for k, v in model.__dict__.items() if v is None]
+
+
+def _extract_activation_functions(model: Model) -> list[Callable]:
+    activations = [layer.activation for layer in model.layers]
+    return activations
+
+
+def _weights_layers_init(model: Model) -> list[tuple]:
+    nodes = [model.input_shape[1]] + [layer.n_nodes for layer in model.layers]
+    activations = _extract_activation_functions(model)
+    weights_layers_shapes = reversed_pairwise(nodes)
+    weights_layers = [
+            WeightsLayer(input_shape, output_shape, activation_fn)
+            for (input_shape, output_shape), activation_fn
+            in zip(weights_layers_shapes, activations)
+        ]
+    return WeigthCore(*weights_layers)            
+
+      
 class Sequential(Model):
     
     def __init__(self,
                  input_shape: tuple,
                  layers: List[Layer],
-                 loss: Callable) -> None:
+                 optimizer: Callable=None,
+                 loss: Callable=None) -> None:
         self.input_shape = input_shape
-        self.layers = [layer for layer in layers]
+        self.layers = layers
         self.weights = _weights_layers_init(self)
+        self.optimzier = optimizer
         self.loss = loss
         self.stat = {}
+        
+    def compile(self, optimizer: Callable, loss: Callable) -> None:
+        self.optimzier = optimizer
+        self.loss = loss
         
     def forward(self, input_data: np.ndarray) -> np.ndarray:
         output = input_data.copy()
@@ -49,6 +84,8 @@ class Sequential(Model):
         pass
     
     def fit(self, X_train, Y_train, epochs, alpha: float=0.1):
+        
+        self.completeness_handler()
         
         self.stat['losses'] = []
         wl = list(self.weights.__dict__.values())
@@ -72,8 +109,15 @@ class Sequential(Model):
                     
     def predict(self, input_data: np.ndarray) -> np.ndarray:
         return self.forward(input_data).flatten()
-        
     
+    def completeness_handler(self) -> None:
+        if  not check_completeness(self):
+            raise IncompleteModelError(
+                'Model missing {} attributes'.format(
+                    get_none_parameters(self)
+                )
+            )
+            
     def info(self) -> None:
         layers_type = [layer.__class__.__name__ for layer in self.layers]
         print('model: {}'.format(self.__class__.__name__))
@@ -90,19 +134,3 @@ class Sequential(Model):
             )
         )
         
-        
-def _extract_activation_functions(model: Model) -> list[Callable]:
-    activations = [layer.activation for layer in model.layers]
-    return activations
-
-
-def _weights_layers_init(model: Model) -> list[tuple]:
-    nodes = [model.input_shape[1]] + [layer.n_nodes for layer in model.layers]
-    activations = _extract_activation_functions(model)
-    weights_layers_shapes = reversed_pairwise(nodes)
-    weights_layers = [
-            WeightsLayer(input_shape, output_shape, activation_fn)
-            for (input_shape, output_shape), activation_fn
-            in zip(weights_layers_shapes, activations)
-        ]
-    return WeigthCore(*weights_layers)
