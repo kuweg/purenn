@@ -1,5 +1,5 @@
 from .weights import Weights
-
+from .activations import set_activation
 from abc import ABC, abstractmethod
 import numpy as np
 from typing import Callable, Union
@@ -27,11 +27,12 @@ class WeightsLayer(Layer):
     def __init__(self,
                  n_input_nodes: int,
                  n_output_nodes: int,
-                 activation: Callable,
+                 activation: Union[Callable, str],
                  weights_strategy: str = 'rand') -> None:
+
         self.n_input_nodes = n_input_nodes
         self.n_output_nodes = n_output_nodes
-        self.activation = activation
+        self.activation = set_activation(activation)
         self._weights_init = Weights(weights_strategy)
         self.weights = self._weights_init(n_input_nodes, n_output_nodes)
         self.bias = np.random.rand(n_input_nodes, 1)

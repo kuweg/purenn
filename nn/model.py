@@ -85,7 +85,7 @@ class Sequential(Model):
     
     def fit(self, X_train, Y_train, epochs, alpha: float=0.1):
         
-        self.completeness_handler()
+        # self.completeness_handler()
         
         self.stat['losses'] = []
         wl = list(self.weights.__dict__.values())
