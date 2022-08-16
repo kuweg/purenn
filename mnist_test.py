@@ -4,6 +4,7 @@ from nn.model import Sequential
 from nn.activations import relu, tanh, sigmoid
 from nn.layers import Dense
 from nn.loss import MeanSquaredError
+from nn.optimizer import GradientDescent
 
 from nn.preprocessing import categorical_encoding, transform_input_data
 
@@ -40,9 +41,12 @@ nn = Sequential(input_shape=(1, 784),
                 layers=[
                     Dense(128, activation=relu),
                     Dense(10, activation=tanh)],
+                optimizer=GradientDescent(0.1),
                 loss=MeanSquaredError())
 
-nn.fit(X_train_, y_train_, epochs=10)
+nn.info()
+
+nn.fit(X_train_, y_train_, epochs=2)
 
 
 y_hats = []

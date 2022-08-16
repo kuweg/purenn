@@ -30,7 +30,9 @@ class WeigthCore:
             
             
 def check_completeness(model) -> bool:
-        return all(model.__dict__.values())
+        return all(
+            list(model.__dict__.values())[:-1]
+            )
     
     
 def get_none_parameters(model) -> list[str]:
@@ -85,7 +87,7 @@ class Sequential(Model):
     
     def fit(self, X_train, Y_train, epochs, alpha: float=0.1):
         
-        # self.completeness_handler()
+        self.completeness_handler()
         
         self.stat['losses'] = []
         wl = list(self.weights.__dict__.values())
@@ -102,7 +104,7 @@ class Sequential(Model):
                 
                 for layer in reversed(wl):
                     loss, dw, db = layer.backward(loss)
-                    layer.update_params(dw=dw*alpha, db=db*alpha)
+                    self.optimzier.update(layer, dw, db)
             self.stat['losses'].append(epoch_loss)
             
             print('Epoch : {} - Loss: {}'.format(e, stat_loss))
@@ -120,7 +122,9 @@ class Sequential(Model):
             
     def info(self) -> None:
         layers_type = [layer.__class__.__name__ for layer in self.layers]
+        print('='*30)
         print('model: {}'.format(self.__class__.__name__))
+        print('-'*30)
         print(
             "\n".join(
             [
@@ -133,4 +137,6 @@ class Sequential(Model):
                 ]
             )
         )
+        print('Optimizer:', self.optimzier)
+        print('loss:', self.loss)
         

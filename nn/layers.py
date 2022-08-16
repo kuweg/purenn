@@ -8,9 +8,14 @@ from typing import Callable, Union
 class Layer(ABC):
     
     @abstractmethod
-    def __call__(self, input_data):
+    def forward(self, input_data):
         pass
     
+    @abstractmethod
+    def backward(self, input_data):
+        pass
+    
+
 class ConsctructionLayer(ABC):
     """Creating a structure of neural network at Model object."""
     def __init__(self, n_nodes: int) -> None:
