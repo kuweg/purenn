@@ -1,5 +1,5 @@
 from itertools import pairwise
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, List
 import numpy as np
 
 
@@ -40,3 +40,6 @@ def apply_function_to_nparray(array: np.ndarray, fn: Callable) -> np.ndarray:
     )
     return mapped_array.reshape(initial_shape)
 
+
+def flatten_list(lst: List[List]) -> List[Any]:
+    return [item for sublist in lst for item in sublist]

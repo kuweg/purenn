@@ -1,4 +1,4 @@
-from mnist.load_mnist import MNIST
+from datasets.mnist import MNIST
 
 from nn.model import Sequential
 from nn.activations import relu, tanh, sigmoid
@@ -17,7 +17,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.preprocessing import StandardScaler
 
 # loading MNIST
-data = MNIST(test_split=0.25)
+data = MNIST(mode='full')
 train_data, test_data = data.dataset
 X_train, y_train = train_data
 X_test, y_test = test_data
