@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 
-from itertools import pairwise
-from typing import Callable, Iterable, List
+from typing import Callable, List, Union
+from tqdm import tqdm
 import numpy as np
 
+from nn.dataloader import DataLoader
 from nn.layers import Layer, WeightsLayer
-from nn.utils import reversed_pairwise
+from nn.utils import _input_fit_handler, reversed_pairwise
 
 
 class IncompleteModelError(Exception):
@@ -55,7 +56,6 @@ def _weights_layers_init(model: Model) -> list[tuple]:
         ]
     return WeigthCore(*weights_layers)            
 
-      
 class Sequential(Model):
     
     def __init__(self,
@@ -85,29 +85,35 @@ class Sequential(Model):
     def back_propogation(self):
         pass
     
-    def fit(self, X_train, Y_train, epochs, alpha: float=0.1):
+    def fit(self,
+            X_train: Union[np.ndarray, DataLoader],
+            y_train: Union[np.ndarray, None]=None,
+            epochs: int=0) -> None:
         
         self.completeness_handler()
-        
+        data = _input_fit_handler(X_train, y_train)
+            
         self.stat['losses'] = []
         wl = list(self.weights.__dict__.values())
+        
         print('Start training for {} epochs'.format(epochs))
         for e in range(epochs):
             epoch_loss = []
-            for x_i, y_i in zip(X_train, Y_train):
+            with tqdm(data, unit='samples') as tepoch:
+                for x_i, y_i in tepoch:
+                    tepoch.set_description('Epoch {}'. format(e))
+                    y_hat = self.forward(x_i)
+                    stat_loss = self.loss(y_i, y_hat)
+                    epoch_loss.append(stat_loss.flatten())
+                    
+                    loss = self.loss.df(y_i, y_hat)
+                    
+                    for layer in reversed(wl):
+                        loss, dw, db = layer.backward(loss)
+                        self.optimzier.update(layer, dw, db)
+                self.stat['losses'].append(epoch_loss)
                 
-                y_hat = self.forward(x_i)
-                stat_loss = self.loss(y_i, y_hat)
-                epoch_loss.append(stat_loss.flatten())
-                
-                loss = self.loss.df(y_i, y_hat)
-                
-                for layer in reversed(wl):
-                    loss, dw, db = layer.backward(loss)
-                    self.optimzier.update(layer, dw, db)
-            self.stat['losses'].append(epoch_loss)
-            
-            print('Epoch : {} - Loss: {}'.format(e, stat_loss))
+                print('{}: {}'.format(self.loss, stat_loss))
                     
     def predict(self, input_data: np.ndarray) -> np.ndarray:
         return self.forward(input_data).flatten()
