@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import numpy as np
-from typing import Callable, Tuple, Union
-from numbers import Number
+from typing import Callable, Generator, Iterable, Tuple, List, Union
+
+from nn.utils import dummy_callable
 
 
 class InputShapeError(Exception):
@@ -19,14 +22,48 @@ def _check_shape_equality(x: Union[np.ndarray, list],
         
 def _form_pairs(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     return np.array(
-        [(x_i, y_i) for x_i, y_i in zip(x,y)]
+        [
+            np.array([x_i, y_i], dtype=object)
+            for x_i, y_i in zip(x,y)],
+        dtype=object
     )
 
 
-def _random_from_array(array: np.ndarray) -> Union[np.ndarray, Number]:
-    donor_index = np.random.choice(range(array.shape[0]))
+def _random_from_array(array: np.ndarray) -> Union[int, int]:
+    random_pick_idx = np.random.choice(range(array.shape[0]))
     
-    return array[donor_index]
+    return random_pick_idx
+
+def make_batches(x: np.ndarray,
+                 y: np.ndarray,
+                 batch_size: int) -> Tuple[np.ndarray, np.ndarray]:
+
+    if len(y.shape) == 1:
+        y = y.reshape(-1, 1)
+    x0, x1 = x.shape
+    new_x0, new_x1 = int(x0 / batch_size), x1
+    x_batch = x.reshape(new_x0, batch_size, new_x1)
+    
+    y0, y1 = y.shape[0], y.shape[1]
+    new_y0 = int(y0 / batch_size)
+    y_batch = y.reshape(new_y0, batch_size, y1)
+
+    return [x_batch, y_batch]
+
+
+def _input_fit_handler(X_train: Union[np.ndarray, DataLoader],
+                       y_train: np.ndarray=None) -> bool:
+    if isinstance(X_train, DataLoader) and y_train is None:
+        print('{} type as input data'.format(type(X_train)))
+        return X_train.data
+    elif isinstance(X_train, np.ndarray) and isinstance(y_train, np.ndarray):
+        print('{} and {} types as input data'.format(type(X_train), type(y_train)))
+        return [(x, y) for x, y in zip(X_train, y_train)]
+    else:
+        raise AttributeError(
+            'When passing a DataLoader object instead of separate x,y arguments\n' +
+            ' make sure that y is None\n'
+        )
 
 
 class DataLoader:
@@ -38,49 +75,100 @@ class DataLoader:
         if _check_shape_equality(X_input, y_input):
             self.x = np.array(X_input)
             self.y = np.array(y_input)
-            self.data = _form_pairs(self.x, self.y)
-            self.n = self.data.shape[0]
+            self._data = [self.x, self.y]
+            self.bs = None
         
-    def apply(self, to_x: bool, to_y: bool, fn: Callable) -> None:
+    def apply(self,
+              to_x: bool=None,
+              to_y: bool=None,
+              both: bool=None,
+              fn: Union[Callable, List[Callable]]=dummy_callable) -> None:
 
-        if to_x and to_y:
-            self.data = np.array(
-                [fn(*xy_i) for xy_i in self.data]
-            )
+        if both: 
+            self._data = np.array(
+                [fn(*xy_i) for xy_i in zip(self._data[0], self._data[1])]
+                )
 
         if to_x:
-            self.data = np.array(
-                [fn(x_i) for x_i, _ in self.data]
-            )
+            self.x = fn(self.x)
 
-        elif to_y:
-            self.data = np.array(
-                [fn(y_i) for _, y_i in self.data]
-            )
+        if to_y:
+            self.y = fn(self.y)
+            
+        self._data = [self.x, self.y]
         
+        return self
         
-    def batch(self, batch_size: int, loop: bool=False):
-        init_shape = self.data.shape
-        print(init_shape)
-        n_samples = init_shape[0]
-        sample_volume = init_shape[1]
+    def batch(self, batch_size: int,
+              upsample: bool=False,
+              loop: bool=False) -> DataLoader:
+        self.bs = batch_size
+        n_samples = self.x.shape[0]
         n_batches = int(n_samples // batch_size)
+        x = self.x.copy()
+        y = self.y.copy()
+        if len(y.shape) in [0, 1]:
+            y = y.reshape(-1, 1)
         
-        if n_batches * batch_size < n_samples:
+        print('Recieved shapes:')
+        print(x.shape, y.shape)
+        if (n_batches * batch_size < n_samples) and upsample:
+            
             n_batches +=1
             n_missing = (n_batches * batch_size) - n_samples
             print('Need to upsample:', n_missing)
-            upsample_values = np.empty_like(self.data[0])
+            upsample_values_x = np.empty_like(self.x[0])
+            upsample_values_y = np.empty_like(self.y[0])
+            
             for _ in range(n_missing):
-                upsample_values = np.vstack(
+                sample_index = _random_from_array(self.x)
+                upsample_values_x = np.vstack(
                     (
-                        upsample_values,
-                        _random_from_array(self.data)
+                        upsample_values_x,
+                        x[sample_index]
                     )
                 )
-            upsample_values = upsample_values[1:]
-            self.data = np.vstack((self.data, upsample_values))
+                upsample_values_y = np.vstack(
+                    (
+                        upsample_values_y,
+                        y[sample_index]
+                    )
+                )
+            upsample_values_x = upsample_values_x[1:]
+            upsample_values_y = upsample_values_y[1:]
             
-        self.data = self.data.reshape(n_batches, batch_size, sample_volume)
+            y = np.vstack((upsample_values_y, y))
+            x = np.vstack((x, upsample_values_x))
+
+        elif not upsample:
+            n_extra_values = n_samples - (n_batches * batch_size)
+            print('Will be removed:', n_extra_values)
+            x_extra_ids = []
+            y_extra_ids = []
+            for _ in range(n_extra_values):
+                sample_index = _random_from_array(x)
+                x_extra_ids.append(sample_index)
+                y_extra_ids.append(sample_index)
+            
+            x = np.delete(x, x_extra_ids, axis=0)
+            y = np.delete(y, y_extra_ids, axis=0)
+                
+        
+
+        self._data = make_batches(x, y, batch_size)
+
+        return self
+    
+    @property
+    def data(self) -> Iterable[np.ndarray, np.ndarray]:
+        return  np.array(
+                    [
+                        (np.transpose(x), np.transpose(y)) for
+                        x, y in zip(self._data[0], self._data[1])
+                        ],
+                    dtype=object 
+                )
+        
+        
         
     

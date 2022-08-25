@@ -48,12 +48,12 @@ class WeightsLayer(Layer):
         self.a = self.activation(self.z)
         return self.a
     
-    def backward(self, error: np.ndarray, alpha: float = 0.01) -> np.ndarray:
-    
+    def backward(self, error: np.ndarray) -> np.ndarray:
+        batch_size = self.input.shape[1]
         dz = self.activation(self.z, derivative=True) * error
             
-        dw = np.dot(dz, self.input.T)
-        db = np.sum(dz, axis=1, keepdims=True)
+        dw = (1 / batch_size) * np.dot(dz, self.input.T)
+        db = (1 / batch_size) * np.sum(dz, axis=1, keepdims=True)
     
         new_error = np.dot(self.weights.T, dz)
         return new_error, dw, db
@@ -64,7 +64,12 @@ class WeightsLayer(Layer):
         
     
     def __repr__(self):
-        return "({},{}) | {}".format(self.n_input_nodes, self.n_output_nodes, self.activation)
+        return "({},{}) <{}> | {}".format(
+            self.n_input_nodes,
+            self.n_output_nodes,
+            self.bias.shape,
+            self.activation
+            )
     
     __call__ = forward
     

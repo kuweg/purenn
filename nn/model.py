@@ -3,10 +3,9 @@ from abc import ABC, abstractmethod
 from typing import Callable, List, Union
 from tqdm import tqdm
 import numpy as np
-
-from nn.dataloader import DataLoader
+from nn.dataloader import DataLoader, _input_fit_handler
 from nn.layers import Layer, WeightsLayer
-from nn.utils import _input_fit_handler, reversed_pairwise
+from nn.utils import reversed_pairwise
 
 
 class IncompleteModelError(Exception):
@@ -87,7 +86,8 @@ class Sequential(Model):
     
     def fit(self,
             X_train: Union[np.ndarray, DataLoader],
-            y_train: Union[np.ndarray, None]=None,
+            y_train: np.ndarray=None,
+            batch_size: int=1,
             epochs: int=0) -> None:
         
         self.completeness_handler()
@@ -95,15 +95,14 @@ class Sequential(Model):
             
         self.stat['losses'] = []
         wl = list(self.weights.__dict__.values())
-        
         print('Start training for {} epochs'.format(epochs))
         for e in range(epochs):
             epoch_loss = []
             with tqdm(data, unit='samples') as tepoch:
                 for x_i, y_i in tepoch:
-                    tepoch.set_description('Epoch {}'. format(e))
+                    tepoch.set_description('Epoch {}'. format(e+1))
                     y_hat = self.forward(x_i)
-                    stat_loss = self.loss(y_i, y_hat)
+                    stat_loss = self.loss(y_i, y_hat) / batch_size
                     epoch_loss.append(stat_loss.flatten())
                     
                     loss = self.loss.df(y_i, y_hat)

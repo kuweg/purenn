@@ -1,5 +1,6 @@
 from datasets.mnist import MNIST
 
+from nn.dataloader import DataLoader
 from nn.model import Sequential
 from nn.activations import relu, tanh, sigmoid
 from nn.layers import Dense
@@ -12,7 +13,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.preprocessing import StandardScaler
 
@@ -37,9 +37,21 @@ y_train_ = categorical_encoding(y_train)
 y_train_ = transform_input_data(y_train_)
 
 
+
+print('Training shapes')
+print('X_train:', X_train_.shape)
+print('y_train:', y_train_.shape)
+
+# batch_size = 1
+# dl_train = DataLoader(X_train_, y_train_)
+# dl_test = DataLoader(X_test_, y_test)
+# dl_train.batch(batch_size)
+# dl_test.batch(batch_size)
+
+
 nn = Sequential(input_shape=(1, 784),
                 layers=[
-                    Dense(128, activation=relu),
+                    Dense(32, activation=relu),
                     Dense(10, activation=tanh)],
                 optimizer=GradientDescent(0.1),
                 loss=MeanSquaredError())

@@ -1,8 +1,8 @@
-from itertools import pairwise
-from typing import Any, Callable, Iterable, List, Union
-import numpy as np
+from __future__ import annotations
 
-from nn.dataloader import DataLoader
+from itertools import pairwise
+from typing import Any, Callable, Iterable, List
+import numpy as np
 
 
 class rewrapper:
@@ -46,15 +46,6 @@ def apply_function_to_nparray(array: np.ndarray, fn: Callable) -> np.ndarray:
 def flatten_list(lst: List[List]) -> List[Any]:
     return [item for sublist in lst for item in sublist]
 
-
-def _input_fit_handler(X_train: Union[np.ndarray, DataLoader],
-                       y_train: Union[np.ndarray, None]=None) -> bool:
-    if isinstance(X_train, DataLoader) and y_train is None:
-        return X_train
-    elif isinstance(X_train, np.ndarray) and isinstance(y_train, np.ndarray):
-        return [(X_train[i], y_train[i]) for i in range(X_train.shape[0])]
-    else:
-        raise AttributeError(
-            'When passing a DataLoader object instead of separate x,y arguments\n' +
-            ' make sure that y is None\n'
-        )
+ 
+def dummy_callable(*args: Any) -> Any:
+    return args
