@@ -4,7 +4,7 @@ from nn.dataloader import DataLoader
 from nn.model import Sequential
 from nn.activations import relu, tanh, sigmoid
 from nn.layers import Dense
-from nn.loss import MeanSquaredError
+from nn.loss import MeanSquaredError, CategoricalCrossEntropy
 from nn.optimizer import GradientDescent
 
 from nn.preprocessing import categorical_encoding, transform_input_data
@@ -52,9 +52,9 @@ print('y_train:', y_train_.shape)
 nn = Sequential(input_shape=(1, 784),
                 layers=[
                     Dense(32, activation=relu),
-                    Dense(10, activation=tanh)],
+                    Dense(10, activation=sigmoid)],
                 optimizer=GradientDescent(0.1),
-                loss=MeanSquaredError())
+                loss=CategoricalCrossEntropy())
 
 nn.info()
 

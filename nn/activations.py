@@ -1,3 +1,5 @@
+from cmath import isnan
+from struct import pack
 from typing import Callable, Union
 import numpy as np
 
@@ -11,7 +13,17 @@ def relu(array: np.ndarray, derivative: bool=False) -> float:
         return (array > 0) * 1.
     return np.maximum(array, 0.)
 
+
+@set_repr('leaky_relu')
+def leaky_relu(array: np.ndarray,
+               derivative: bool=False,
+               slope: float=0.0001):
     
+    if derivative:
+        return (array > slope) * 1
+    return np.maximum(array, slope) 
+
+
 @set_repr('tanh')    
 def tanh(array: np.ndarray, derivative: bool=False) -> np.ndarray:
         
@@ -31,6 +43,12 @@ def sigmoid(array: np.ndarray, derivative: bool=False) -> np.ndarray:
     return g
 
 
+@set_repr('softmax')
+def softmax(array: np.ndarray) -> np.ndarray:
+    a = np.exp(array)
+    b = np.sum(np.exp(array))
+    res = np.divide(a, b, out=np.zeros_like(a), where=b!=0)
+    return res
 
 class ActivationExistsError(Exception):
     pass
@@ -39,7 +57,9 @@ class ActivationExistsError(Exception):
 ACTIVATION_MAP ={
     'relu': relu,
     'tanh': tanh,
-    'sigmoid': sigmoid
+    'sigmoid': sigmoid,
+    'softmax': softmax,
+    'leaky_relu': leaky_relu
 }
 
 def get_mapped_function(function_name: str) -> Union[Callable, None]:
@@ -56,3 +76,6 @@ def get_mapped_function(function_name: str) -> Union[Callable, None]:
 def set_activation(activation: Union[Callable, str]) -> Callable:
     return (activation if isinstance(activation, Callable)
             else get_mapped_function(activation))
+    
+def is_softmax(activation_fn: Callable) -> bool:
+    return activation_fn is softmax

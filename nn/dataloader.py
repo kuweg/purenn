@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from typing import Callable, Generator, Iterable, Tuple, List, Union
+from typing import Callable, Iterable, Tuple, List, Union
 
 from nn.utils import dummy_callable
 
@@ -56,7 +56,8 @@ def _input_fit_handler(X_train: Union[np.ndarray, DataLoader],
     if isinstance(X_train, DataLoader) and y_train is None:
         print('{} type as input data'.format(type(X_train)))
         return X_train.data
-    elif isinstance(X_train, np.ndarray) and isinstance(y_train, np.ndarray):
+    elif ((isinstance(X_train, np.ndarray) and isinstance(y_train, np.ndarray)) or
+          (isinstance(X_train, list) and isinstance(y_train, list))):
         print('{} and {} types as input data'.format(type(X_train), type(y_train)))
         return [(x, y) for x, y in zip(X_train, y_train)]
     else:
