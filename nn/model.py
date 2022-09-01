@@ -3,13 +3,11 @@ from prettytable import PrettyTable
 from typing import Callable, List, Union
 from tqdm import tqdm
 import numpy as np
-from nn.dataloader import DataLoader, _input_fit_handler
-from nn.layers import Layer, WeightsLayer
-from nn.utils import reversed_pairwise
 
-
-class IncompleteModelError(Exception):
-    pass
+from .dataloader import DataLoader, _input_fit_handler
+from .exceptions import IncompleteModelError
+from .layers import Layer, WeightsLayer
+from .utils import reversed_pairwise
 
 
 WL_PREFIX = "wl{}"
@@ -20,6 +18,10 @@ class Model(ABC):
     @abstractmethod
     def forward(self, input_data: np.ndarray) -> np.ndarray:
         pass
+    
+    @abstractmethod
+    def backward(self, loss: np.float64) -> None:
+        pass
 
 
 class WeigthCore:
@@ -27,6 +29,15 @@ class WeigthCore:
     def __init__(self, *args: List[Layer]):
         for order, layer in enumerate(args):
             setattr(self, WL_PREFIX.format(order), layer)
+            
+        self.n_layers = order + 1
+        
+    @property
+    def layers(self):
+        return [
+                getattr(self, WL_PREFIX.format(layer_number))
+                for layer_number in range(self.n_layers)
+                ]
             
             
 def check_completeness(model) -> bool:
@@ -75,14 +86,17 @@ class Sequential(Model):
         
     def forward(self, input_data: np.ndarray) -> np.ndarray:
         output = input_data.copy()
+        layers = self.weights.layers
         for layer_number in range(len(self.layers)):
-            layer = getattr(self.weights, WL_PREFIX.format(layer_number))
+            layer = layers[layer_number]
             output = layer(output)
         return output
     
     
-    def back_propogation(self):
-        pass
+    def backward(self, loss: np.float64) -> None:
+        for layer in reversed(self.weights.layers):
+            loss, dw, db = layer.backward(loss)
+            self.optimzier.update(layer, dw, db)
     
     def fit(self,
             X_train: Union[np.ndarray, DataLoader],
@@ -94,7 +108,6 @@ class Sequential(Model):
         data = _input_fit_handler(X_train, y_train)
             
         self.stat['losses'] = []
-        wl = list(self.weights.__dict__.values())
         print('Start training for {} epochs'.format(epochs))
         for e in range(epochs):
             epoch_loss = []
@@ -107,9 +120,7 @@ class Sequential(Model):
                     
                     loss = self.loss.df(y_i, y_hat)
                     
-                    for layer in reversed(wl):
-                        loss, dw, db = layer.backward(loss)
-                        self.optimzier.update(layer, dw, db)
+                    self.backward(loss)
                     self.stat['losses'].append(epoch_loss)
                 
                 print('{}: {}'.format(self.loss, stat_loss))

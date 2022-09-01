@@ -1,8 +1,7 @@
-from cmath import isnan
-from struct import pack
 from typing import Callable, Union
 import numpy as np
 
+from .exceptions import UnknownActivationError
 from .utils import set_repr
 
 
@@ -17,11 +16,11 @@ def relu(array: np.ndarray, derivative: bool=False) -> float:
 @set_repr('leaky_relu')
 def leaky_relu(array: np.ndarray,
                derivative: bool=False,
-               slope: float=0.0001):
+               alpha: float=0.0001):
     
     if derivative:
-        return (array > slope) * 1
-    return np.maximum(array, slope) 
+        return np.where(array<=0, alpha, 1) 
+    return np.maximum(array, alpha) 
 
 
 @set_repr('tanh')    
@@ -45,13 +44,24 @@ def sigmoid(array: np.ndarray, derivative: bool=False) -> np.ndarray:
 
 @set_repr('softmax')
 def softmax(array: np.ndarray) -> np.ndarray:
-    a = np.exp(array)
-    b = np.sum(np.exp(array))
-    res = np.divide(a, b, out=np.zeros_like(a), where=b!=0)
-    return res
+    shifted_array = array - np.max(array)
+    numerator = np.exp(shifted_array)
+    denominator = np.sum(numerator)
+    return numerator/denominator
 
-class ActivationExistsError(Exception):
-    pass
+
+@set_repr('softmax2')
+def softmax2(array: np.ndarray, derivative: bool=False) -> np.ndarray:
+    
+    shifted_array = array - np.max(array)
+    numerator = np.exp(shifted_array)
+    denominator = np.sum(numerator)
+    softmax_ = numerator/denominator
+    if derivative:
+        softmax(1 - softmax_)
+        
+    return softmax_
+
 
 
 ACTIVATION_MAP ={
@@ -66,7 +76,7 @@ def get_mapped_function(function_name: str) -> Union[Callable, None]:
     
     if function_name in ACTIVATION_MAP.keys():
         return ACTIVATION_MAP[function_name]
-    raise ActivationExistsError(
+    raise UnknownActivationError(
         'Activation function {} is not exists. Please, use one of the {}'.format(
             function_name, list(ACTIVATION_MAP.values())
         )

@@ -1,19 +1,24 @@
-from .weights import Weights
-from .activations import set_activation, is_softmax
-from .utils import dummy_callable
 from abc import ABC, abstractmethod
 import numpy as np
 from typing import Callable, Union
+
+from .weights import Weights
+from .activations import set_activation, is_softmax
+from .utils import dummy_callable
 
 
 class Layer(ABC):
     
     @abstractmethod
-    def forward(self, input_data):
+    def forward(self, input_data) -> None:
         pass
     
     @abstractmethod
-    def backward(self, input_data):
+    def backward(self, input_data) -> None:
+        pass
+    
+    @abstractmethod
+    def update_params(self, dw: np.ndarray, db: np.ndarray) -> None:
         pass
     
 
@@ -70,7 +75,7 @@ class WeightsLayer(Layer):
         self.bias -= db
         
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "({}, {})|<{}>|{}".format(
             self.n_input_nodes,
             self.n_output_nodes,

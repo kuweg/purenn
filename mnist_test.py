@@ -2,7 +2,7 @@ from datasets.mnist import MNIST
 
 from nn.dataloader import DataLoader
 from nn.model import Sequential
-from nn.activations import relu, tanh, sigmoid
+from nn.activations import leaky_relu, relu, softmax, tanh, sigmoid
 from nn.layers import Dense
 from nn.loss import MeanSquaredError, CategoricalCrossEntropy
 from nn.optimizer import GradientDescent
@@ -51,10 +51,10 @@ print('y_train:', y_train_.shape)
 
 nn = Sequential(input_shape=(1, 784),
                 layers=[
-                    Dense(32, activation=relu),
-                    Dense(10, activation=sigmoid)],
+                    Dense(32, activation=leaky_relu),
+                    Dense(10, activation=softmax)],
                 optimizer=GradientDescent(0.1),
-                loss=CategoricalCrossEntropy())
+                loss=MeanSquaredError())
 
 nn.info()
 
