@@ -51,8 +51,8 @@ print('y_train:', y_train_.shape)
 
 nn = Sequential(input_shape=(1, 784),
                 layers=[
-                    Dense(32, activation=leaky_relu),
-                    Dense(10, activation=softmax)],
+                    Dense(100, activation=sigmoid),
+                    Dense(10, activation=sigmoid)],
                 optimizer=GradientDescent(0.1),
                 loss=MeanSquaredError())
 

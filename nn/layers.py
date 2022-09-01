@@ -31,9 +31,11 @@ class Dense(ConsctructionLayer):
     
     def __init__(self,
                  n_nodes: int,
-                 activation: Callable=dummy_callable) -> None:
+                 activation: Callable=dummy_callable,
+                 weights_strategy: str='rand') -> None:
         super().__init__(n_nodes)
         self.activation = activation
+        self.weights_strategy = weights_strategy
 
 class WeightsLayer(Layer):
     
@@ -41,7 +43,7 @@ class WeightsLayer(Layer):
                  n_input_nodes: int,
                  n_output_nodes: int,
                  activation: Union[Callable, str]=dummy_callable,
-                 weights_strategy: str = 'rand') -> None:
+                 weights_strategy: str = 'xavier') -> None:
 
         self.n_input_nodes = n_input_nodes
         self.n_output_nodes = n_output_nodes

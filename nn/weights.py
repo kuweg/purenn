@@ -13,7 +13,9 @@ class Weights:
     def __init__(self, weights_strategy: str=None) -> None:
         self.weights_strategy = weights_strategy
         
-    # TODO: xavier weigths initialization
+    @staticmethod
+    def xavier(shape: tuple) -> np.ndarray:
+        return np.random.rand(*shape) / np.sqrt(shape[0])
 
     @staticmethod
     def zeros(shape: int | tuple) -> np.ndarray:

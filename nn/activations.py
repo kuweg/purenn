@@ -44,7 +44,10 @@ def sigmoid(array: np.ndarray, derivative: bool=False) -> np.ndarray:
 
 @set_repr('softmax')
 def softmax(array: np.ndarray) -> np.ndarray:
-    shifted_array = array - np.max(array)
+    try:
+        shifted_array = array - np.max(array)
+    except RuntimeWarning as ex:
+        print(array)
     numerator = np.exp(shifted_array)
     denominator = np.sum(numerator)
     return numerator/denominator

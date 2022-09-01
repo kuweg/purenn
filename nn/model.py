@@ -54,15 +54,20 @@ def _extract_activation_functions(model: Model) -> list[Callable]:
     activations = [layer.activation for layer in model.layers]
     return activations
 
+def _extract_weights_strategies(model: Model) -> list[str]:
+    ws = [layer.weights_strategy for layer in model.layers]
+    return ws
+
 
 def _weights_layers_init(model: Model) -> list[tuple]:
     nodes = [model.input_shape[1]] + [layer.n_nodes for layer in model.layers]
     activations = _extract_activation_functions(model)
+    w_strategies = _extract_weights_strategies(model)
     weights_layers_shapes = reversed_pairwise(nodes)
     weights_layers = [
-            WeightsLayer(input_shape, output_shape, activation_fn)
-            for (input_shape, output_shape), activation_fn
-            in zip(weights_layers_shapes, activations)
+            WeightsLayer(input_shape, output_shape, activation_fn, ws)
+            for (input_shape, output_shape), activation_fn, ws
+            in zip(weights_layers_shapes, activations, w_strategies)
         ]
     return WeigthCore(*weights_layers)            
 
