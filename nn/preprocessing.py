@@ -3,6 +3,7 @@ import numpy as np
 
 
 def categorical_encoding(array: Union[np.ndarray, list]) -> np.ndarray:
+    print(array.shape)
     len_ = np.max(array) + 1
     initial_shape = array.flatten().shape
     new_shape = (initial_shape[0], len_)
