@@ -15,7 +15,7 @@ class Weights:
         
     @staticmethod
     def xavier(shape: tuple) -> np.ndarray:
-        return np.random.rand(*shape) / np.sqrt(shape[0])
+        return np.random.randn(*shape) / np.sqrt(shape[0])
 
     @staticmethod
     def zeros(shape: int | tuple) -> np.ndarray:
@@ -26,18 +26,25 @@ class Weights:
         return np.ones(shape)
 
     @staticmethod
-    def rand(shape: int | tuple, scaling: float=.01) -> np.ndarray:
+    def rand(shape: int | tuple) -> np.ndarray:
 
         if isinstance(shape, tuple):
-            return np.random.rand(*shape) * scaling
-        return np.random.rand(shape) * scaling
+            return np.random.randn(*shape)
+        return np.random.randn(shape)
+
+    @property
+    def _strategies(self) -> list[str]:
+        return [strat for strat in list(self.__class__.__dict__)
+                if not strat.startswith('_')]
     
-    def get_weights_initializator(self) -> Callable:
+    def _get_weights_initializator(self) -> Callable:
         
         if hasattr(self, self.weights_strategy):
             return object.__getattribute__(self, self.weights_strategy)
-        raise AttributeError('Specified weights strategy is not exists.')
+        raise AttributeError('Specified weights strategy is not exists.'+
+                             'Please, use one of these {} strategies'
+                             .format(self._strategies))
     
     def __call__(self, *args: Any) -> Any:
         shape = _shape_checking(*args)
-        return self.get_weights_initializator()(shape)
+        return self._get_weights_initializator()(shape)

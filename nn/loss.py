@@ -1,4 +1,5 @@
 from abc import ABC, abstractstaticmethod
+from typing import Callable
 import numpy as np
 
 class Loss(ABC):
@@ -10,6 +11,9 @@ class Loss(ABC):
     @abstractstaticmethod
     def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
         pass
+    
+    def __call__(self, y_true: np.ndarray, y_pred: np.ndarray) -> Callable:
+        return self.calc(y_true, y_pred)
     
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -23,8 +27,18 @@ class MeanSquaredError(Loss):
     @staticmethod
     def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray: 
         return 2*(y_pred-y_true)/y_true.size
+  
+
+class MeanAbsoluteError(Loss):
     
-    __call__ = calc
+    @staticmethod
+    def calc(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
+        return np.mean(abs(y_true - y_pred))
+    
+    @staticmethod
+    def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
+        n = y_true.shape[0]
+        return -((y_true - y_pred) / (abs(y_true - y_pred) + 10**-100))/n
 
 
 class CategoricalCrossEntropy(Loss):
@@ -49,7 +63,14 @@ class CategoricalCrossEntropy(Loss):
     @staticmethod
     def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
         return y_true - y_pred
-    
-    __call__ = calc
-    
-    
+
+
+class CrossEntropyCost(Loss):
+
+    @staticmethod
+    def calc(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
+        return np.sum(np.nan_to_num(-y_true*np.log(y_pred)-(1-y_true)*np.log(1-y_pred)))
+
+    @staticmethod
+    def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
+        return (y_pred-y_true)

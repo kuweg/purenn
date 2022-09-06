@@ -49,3 +49,28 @@ def flatten_list(lst: List[List]) -> List[Any]:
  
 def dummy_callable(*args: Any) -> Any:
     return args
+
+
+vertical_char = '|'
+bottom_char = '-'
+corner_char = '+'
+max_line_len = 12
+
+def add_vertical_row(table: 'PrettyTable', row_name: str, row_value: str):
+    n_cells = len(table.field_names)
+    total_line_length = sum(
+        list(
+            map(
+                lambda field: len(field)+2, table.field_names
+                )
+            )
+        ) + n_cells + 1
+    if len(row_name) + 2 < max_line_len:
+        row_name = row_name.center(max_line_len - 1, ' ')
+    opt_line = vertical_char + ' ' + row_name + vertical_char +' ' + row_value
+    e_space = total_line_length - len(opt_line) - 1
+    opt_line += ' ' * e_space
+    opt_line += vertical_char
+    empty_bottom_space = total_line_length - 2
+    bottom_line = corner_char + '-'*empty_bottom_space + corner_char
+    return opt_line, bottom_line

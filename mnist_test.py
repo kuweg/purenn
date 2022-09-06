@@ -51,7 +51,7 @@ print('y_train:', y_train_.shape)
 
 nn = Sequential(input_shape=(1, 784),
                 layers=[
-                    Dense(100, activation=sigmoid),
+                    Dense(100, activation=relu),
                     Dense(10, activation=sigmoid)],
                 optimizer=GradientDescent(0.1),
                 loss=MeanSquaredError())

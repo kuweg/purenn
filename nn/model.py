@@ -7,7 +7,7 @@ import numpy as np
 from .dataloader import DataLoader, _input_fit_handler
 from .exceptions import IncompleteModelError
 from .layers import Layer, WeightsLayer
-from .utils import reversed_pairwise
+from .utils import reversed_pairwise, add_vertical_row
 
 
 WL_PREFIX = "wl{}"
@@ -145,7 +145,11 @@ class Sequential(Model):
         desc = PrettyTable()
         model_name = 'model: {}'.format(self.__class__.__name__)
         desc.title = model_name
-        desc.field_names = ['Layer', 'Weights shape', 'Bias shape', 'activation']
+        desc.field_names = ['Layer type',
+                            'Weights shape',
+                            'Bias shape',
+                            'W strategy',
+                            'Activation']
         layers_type = [layer.__class__.__name__ for layer in self.layers]
         layers_info = [
                         layer_type + '|' + str(layer)
@@ -158,6 +162,14 @@ class Sequential(Model):
         for layer_info in layers_info:
             desc.add_row(layer_info.split('|'))
         print(desc)
-        print('Optimizer:', self.optimzier)
-        print('loss:', self.loss)
+        opt, b_opt = add_vertical_row(desc,
+                                      'Optimizer',
+                                      str(self.optimzier))
+        loss, b_loss = add_vertical_row(desc,
+                                        'Loss',
+                                        str(self.loss))
+        print(opt)
+        print(b_opt)
+        print(loss)
+        print(b_loss)
         

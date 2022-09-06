@@ -44,27 +44,10 @@ def sigmoid(array: np.ndarray, derivative: bool=False) -> np.ndarray:
 
 @set_repr('softmax')
 def softmax(array: np.ndarray) -> np.ndarray:
-    try:
-        shifted_array = array - np.max(array)
-    except RuntimeWarning as ex:
-        print(array)
-    numerator = np.exp(shifted_array)
-    denominator = np.sum(numerator)
-    return numerator/denominator
-
-
-@set_repr('softmax2')
-def softmax2(array: np.ndarray, derivative: bool=False) -> np.ndarray:
-    
     shifted_array = array - np.max(array)
     numerator = np.exp(shifted_array)
-    denominator = np.sum(numerator)
-    softmax_ = numerator/denominator
-    if derivative:
-        softmax(1 - softmax_)
-        
-    return softmax_
-
+    denominator = np.sum(numerator, axis=0)
+    return numerator/denominator
 
 
 ACTIVATION_MAP ={
@@ -80,7 +63,7 @@ def get_mapped_function(function_name: str) -> Union[Callable, None]:
     if function_name in ACTIVATION_MAP.keys():
         return ACTIVATION_MAP[function_name]
     raise UnknownActivationError(
-        'Activation function {} is not exists. Please, use one of the {}'.format(
+        'Activation function {} is not exists. Please, use one of these {}'.format(
             function_name, list(ACTIVATION_MAP.values())
         )
     )
