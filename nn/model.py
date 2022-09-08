@@ -7,7 +7,7 @@ import numpy as np
 from .dataloader import DataLoader, _input_fit_handler
 from .exceptions import IncompleteModelError
 from .layers import Layer, WeightsLayer
-from .utils import reversed_pairwise
+from .utils import reversed_pairwise, add_vertical_row
 
 
 WL_PREFIX = "wl{}"
@@ -54,15 +54,20 @@ def _extract_activation_functions(model: Model) -> list[Callable]:
     activations = [layer.activation for layer in model.layers]
     return activations
 
+def _extract_weights_strategies(model: Model) -> list[str]:
+    ws = [layer.weights_strategy for layer in model.layers]
+    return ws
+
 
 def _weights_layers_init(model: Model) -> list[tuple]:
     nodes = [model.input_shape[1]] + [layer.n_nodes for layer in model.layers]
     activations = _extract_activation_functions(model)
+    w_strategies = _extract_weights_strategies(model)
     weights_layers_shapes = reversed_pairwise(nodes)
     weights_layers = [
-            WeightsLayer(input_shape, output_shape, activation_fn)
-            for (input_shape, output_shape), activation_fn
-            in zip(weights_layers_shapes, activations)
+            WeightsLayer(input_shape, output_shape, activation_fn, ws)
+            for (input_shape, output_shape), activation_fn, ws
+            in zip(weights_layers_shapes, activations, w_strategies)
         ]
     return WeigthCore(*weights_layers)            
 
@@ -86,9 +91,7 @@ class Sequential(Model):
         
     def forward(self, input_data: np.ndarray) -> np.ndarray:
         output = input_data.copy()
-        layers = self.weights.layers
-        for layer_number in range(len(self.layers)):
-            layer = layers[layer_number]
+        for layer in self.weights.layers:
             output = layer(output)
         return output
     
@@ -108,6 +111,8 @@ class Sequential(Model):
         data = _input_fit_handler(X_train, y_train)
             
         self.stat['losses'] = []
+        self.stat['mean_w0'] = []
+        self.stat['mean_w1'] = []
         print('Start training for {} epochs'.format(epochs))
         for e in range(epochs):
             epoch_loss = []
@@ -119,9 +124,11 @@ class Sequential(Model):
                     epoch_loss.append(stat_loss.flatten())
                     
                     loss = self.loss.df(y_i, y_hat)
-                    
                     self.backward(loss)
+                    
                     self.stat['losses'].append(epoch_loss)
+                    self.stat['mean_w0'].append(np.mean(self.weights.wl0.weights))
+                    self.stat['mean_w1'].append(np.mean(self.weights.wl1.weights))
                 
                 print('{}: {}'.format(self.loss, stat_loss))
                     
@@ -140,7 +147,11 @@ class Sequential(Model):
         desc = PrettyTable()
         model_name = 'model: {}'.format(self.__class__.__name__)
         desc.title = model_name
-        desc.field_names = ['Layer', 'Weights shape', 'Bias shape', 'activation']
+        desc.field_names = ['Layer type',
+                            'Weights shape',
+                            'Bias shape',
+                            'W strategy',
+                            'Activation']
         layers_type = [layer.__class__.__name__ for layer in self.layers]
         layers_info = [
                         layer_type + '|' + str(layer)
@@ -153,6 +164,14 @@ class Sequential(Model):
         for layer_info in layers_info:
             desc.add_row(layer_info.split('|'))
         print(desc)
-        print('Optimizer:', self.optimzier)
-        print('loss:', self.loss)
+        opt, b_opt = add_vertical_row(desc,
+                                      'Optimizer',
+                                      str(self.optimzier))
+        loss, b_loss = add_vertical_row(desc,
+                                        'Loss',
+                                        str(self.loss))
+        print(opt)
+        print(b_opt)
+        print(loss)
+        print(b_loss)
         

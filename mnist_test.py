@@ -1,4 +1,4 @@
-from datasets.mnist import MNIST
+from datasets.mnist import MNIST, normalize_mnist
 
 from nn.dataloader import DataLoader
 from nn.model import Sequential
@@ -25,10 +25,8 @@ X_test, y_test = test_data
 print('Train:', X_train.shape, y_train.shape)
 print('Test:', X_test.shape, y_test.shape)
 
-scaler = StandardScaler()
-scaler.fit(X_train)
-X_train = scaler.transform(X_train)
-X_test_ = scaler.transform(X_test)
+X_train = normalize_mnist(X_train)
+X_test_ = normalize_mnist(X_test)
 
 X_test_ = transform_input_data(X_test_)
 X_train_ = transform_input_data(X_train)
@@ -51,14 +49,14 @@ print('y_train:', y_train_.shape)
 
 nn = Sequential(input_shape=(1, 784),
                 layers=[
-                    Dense(32, activation=leaky_relu),
-                    Dense(10, activation=softmax)],
-                optimizer=GradientDescent(0.1),
+                    Dense(200, activation=relu),
+                    Dense(10, activation=sigmoid)],
+                optimizer=GradientDescent(0.15),
                 loss=MeanSquaredError())
 
 nn.info()
 
-nn.fit(X_train_, y_train_, epochs=2)
+nn.fit(X_train_, y_train_, epochs=10)
 
 
 y_hats = []

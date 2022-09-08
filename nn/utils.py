@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from itertools import pairwise
+from pickletools import optimize
 from typing import Any, Callable, Iterable, List
 import numpy as np
 
@@ -46,6 +47,33 @@ def apply_function_to_nparray(array: np.ndarray, fn: Callable) -> np.ndarray:
 def flatten_list(lst: List[List]) -> List[Any]:
     return [item for sublist in lst for item in sublist]
 
- 
+
+@set_repr('None')
 def dummy_callable(*args: Any) -> Any:
     return args
+
+
+vertical_char = '|'
+bottom_char = '-'
+corner_char = '+'
+max_line_len = 12
+
+def add_vertical_row(table: 'PrettyTable', row_name: str, row_value: str):
+    n_cells = len(table.field_names)
+    total_line_length = sum(
+        list(
+            map(
+                lambda field: len(field)+2, table.field_names
+                )
+            )
+        ) + n_cells + 1
+    if len(row_name) + 2 < max_line_len:
+        row_name = row_name.center(max_line_len - 1, ' ')
+    exp_line = vertical_char + ' ' + row_name + vertical_char +' ' + row_value
+    e_space = total_line_length - len(exp_line)
+    opt_line = exp_line + ' ' * e_space + vertical_char
+    empty_bottom_space = total_line_length - 2
+    fp = len(exp_line) - len(row_value) - 3
+    sp = empty_bottom_space - fp
+    bottom_line = corner_char +'-'*fp+'+'+'-'*sp+ corner_char
+    return opt_line, bottom_line
