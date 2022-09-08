@@ -47,13 +47,13 @@ class WeightsLayer(Layer):
 
         self.n_input_nodes = n_input_nodes
         self.n_output_nodes = n_output_nodes
-        self.activation = set_activation(activation)
+        self.activation = set_activation(activation) 
         self._weights_init = Weights(weights_strategy)
         self.weights = self._weights_init(n_input_nodes, n_output_nodes)
         self.bias = np.random.randn(n_input_nodes, 1)
         
     def forward(self, input_data: Union[Layer, np.ndarray]) -> np.ndarray:     
-        self.input = input_data
+        self.input = input_data.copy()
         self.z = np.dot(self.weights, input_data) + self.bias
         self.a = self.activation(self.z)
         return self.a
@@ -61,15 +61,14 @@ class WeightsLayer(Layer):
     def backward(self, error: np.ndarray) -> np.ndarray:
         batch_size = self.input.shape[1]
         if is_softmax(self.activation):
-            y = error * (-self.a)
-            dz = self.a - y
+            dz = np.sum(self.activation.df(self.z) * error, axis=0).reshape(-1, 1)
         else:
-            dz = self.activation(self.z, derivative=True) * error
+            dz = self.activation.df(self.z) * error
             
         dw = (1 / batch_size) * np.dot(dz, self.input.T)
-        db = (1 / batch_size) * np.sum(dz, axis=1, keepdims=True)
+        db = (1 / batch_size) * dz
     
-        new_error = np.dot(self.weights.T, dz)
+        new_error = np.sum(dz * self.weights, axis=0).reshape(-1, 1)
         return new_error, dw, db
     
     def update_params(self, dw: np.ndarray, db: np.ndarray) -> None:

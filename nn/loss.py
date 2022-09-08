@@ -57,20 +57,20 @@ class CategoricalCrossEntropy(Loss):
     @staticmethod
     def calc(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
         loss = -np.sum(y_true * (np.log(y_pred+1e-10)))
-        loss = loss / (len(y_true))
+        return loss / float(y_pred.shape[0])
+    
+    @staticmethod
+    def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
+        return y_pred - y_true
+
+
+class CrossEntropyLoss(Loss):
+
+    @staticmethod
+    def calc(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
+        loss = -np.sum(y_true * np.log(y_pred + 10**-100))
         return loss
     
     @staticmethod
     def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
-        return y_true - y_pred
-
-
-class CrossEntropyCost(Loss):
-
-    @staticmethod
-    def calc(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
-        return np.sum(np.nan_to_num(-y_true*np.log(y_pred)-(1-y_true)*np.log(1-y_pred)))
-
-    @staticmethod
-    def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
-        return (y_pred-y_true)
+        return -y_true/(y_pred + 10**-100)

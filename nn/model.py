@@ -91,9 +91,7 @@ class Sequential(Model):
         
     def forward(self, input_data: np.ndarray) -> np.ndarray:
         output = input_data.copy()
-        layers = self.weights.layers
-        for layer_number in range(len(self.layers)):
-            layer = layers[layer_number]
+        for layer in self.weights.layers:
             output = layer(output)
         return output
     
@@ -113,6 +111,8 @@ class Sequential(Model):
         data = _input_fit_handler(X_train, y_train)
             
         self.stat['losses'] = []
+        self.stat['mean_w0'] = []
+        self.stat['mean_w1'] = []
         print('Start training for {} epochs'.format(epochs))
         for e in range(epochs):
             epoch_loss = []
@@ -124,9 +124,11 @@ class Sequential(Model):
                     epoch_loss.append(stat_loss.flatten())
                     
                     loss = self.loss.df(y_i, y_hat)
-                    
                     self.backward(loss)
+                    
                     self.stat['losses'].append(epoch_loss)
+                    self.stat['mean_w0'].append(np.mean(self.weights.wl0.weights))
+                    self.stat['mean_w1'].append(np.mean(self.weights.wl1.weights))
                 
                 print('{}: {}'.format(self.loss, stat_loss))
                     
