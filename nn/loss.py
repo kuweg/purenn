@@ -41,27 +41,27 @@ class MeanAbsoluteError(Loss):
         return -((y_true - y_pred) / (abs(y_true - y_pred) + 10**-100))/n
 
 
-class CategoricalCrossEntropy(Loss):
-    """
-    This function calculates and return the categorical-crossentropy-loss.
-    "+1e-15" is just for adding a very small number to avoid np.log(0).
+# class CategoricalCrossEntropy(Loss):
+#     """
+#     This function calculates and return the categorical-crossentropy-loss.
+#     "+1e-15" is just for adding a very small number to avoid np.log(0).
     
-    :param y_true: the current predicted output of the model
-    :type y_true: np.ndarray
-    :param y_pred: the expected output
-    :type y_rped: np.ndarray
-    :return: the categorical-crossentropy-loss
-    :rtype: np.float64
-    """
+#     :param y_true: the current predicted output of the model
+#     :type y_true: np.ndarray
+#     :param y_pred: the expected output
+#     :type y_rped: np.ndarray
+#     :return: the categorical-crossentropy-loss
+#     :rtype: np.float64
+#     """
     
-    @staticmethod
-    def calc(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
-        loss = -np.sum(y_true * (np.log(y_pred+1e-10)))
-        return loss / float(y_pred.shape[0])
+#     @staticmethod
+#     def calc(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
+#         loss = -np.sum(y_true * (np.log(y_pred+1e-10)))
+#         return loss / float(y_pred.shape[0])
     
-    @staticmethod
-    def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
-        return y_pred - y_true
+#     @staticmethod
+#     def df(y_true: np.ndarray, y_pred: np.ndarray) -> np.float64:
+#         return y_pred - y_true
 
 
 class CrossEntropyLoss(Loss):

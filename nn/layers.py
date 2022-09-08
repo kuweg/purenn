@@ -57,7 +57,7 @@ class WeightsLayer(Layer):
         self.z = np.dot(self.weights, input_data) + self.bias
         self.a = self.activation(self.z)
         return self.a
-    
+
     def backward(self, error: np.ndarray) -> np.ndarray:
         batch_size = self.input.shape[1]
         if is_softmax(self.activation):
@@ -77,7 +77,7 @@ class WeightsLayer(Layer):
         
     
     def __repr__(self) -> str:
-        return "({}, {})|{}|{}|{}".format(
+        return "({}, {}) | {} | {} | {}".format(
             self.n_input_nodes,
             self.n_output_nodes,
             self.bias.shape,

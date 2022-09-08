@@ -3,7 +3,7 @@ from typing import Callable, Union
 import numpy as np
 
 from .exceptions import UnknownActivationError
-from .utils import set_repr
+from .utils import dummy_callable
 
 
 class Activation(ABC):
@@ -64,15 +64,23 @@ class Sigmoid(Activation):
 
 class Softmax(Activation):
     
-    def activation(self, array: np.ndarray, stable: bool=False) -> np.ndarray:
-        if stable:
-            array = array - np.max(array)
+    def activation(self, array: np.ndarray) -> np.ndarray:
         return np.exp(array) / np.sum(np.exp(array), axis=0)
     
     def df(self, array: np.ndarray) -> np.ndarray:
         I = np.eye(array.shape[0])
-        return self.activation(array) * (I - self.activation(array).T) 
+        return self.activation(array) * (I - self.activation(array).T)
+    
 
+class StableSoftmax(Softmax):
+    
+    def activation(self, array: np.ndarray) -> np.ndarray:
+        array = array - np.max(array)
+        return np.exp(array) / np.sum(np.exp(array), axis=0)
+    
+    def __repr__(self) -> str:
+        return 's_softmax'
+    
 # @set_repr('softmax')
 # def softmax(array: np.ndarray) -> np.ndarray:
 #     shifted_array = array - np.max(array)
@@ -86,13 +94,16 @@ tanh = Tanh()
 sigmoid = Sigmoid()
 leaky_relu = LeakyRelu()
 softmax = Softmax()
+s_softmax = StableSoftmax()
 
 ACTIVATION_MAP ={
     'relu': relu,
     'tanh': tanh,
     'sigmoid': sigmoid,
     'softmax': softmax,
-    'leaky_relu': leaky_relu
+    'leaky_relu': leaky_relu,
+    's_softmax': s_softmax,
+    'none': dummy_callable
 }
 
 
@@ -113,4 +124,4 @@ def set_activation(activation: Union[Callable, str]) -> Callable:
     
 
 def is_softmax(activation_fn: Callable) -> bool:
-    return activation_fn is softmax
+    return activation_fn is softmax or activation_fn is s_softmax
