@@ -4,3 +4,7 @@ class IncompleteModelError(Exception):
 
 class UnknownActivationError(Exception):
     pass
+
+
+class DirectoryNotFoundError(Exception):
+    pass

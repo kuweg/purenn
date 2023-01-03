@@ -29,13 +29,14 @@ class BostonHousing:
     :type test_size: float
     """
     
-    def __init__(self, test_size: float=None) -> None:
+    def __init__(self, test_size: float=0.) -> None:
+        assert 0.<= test_size <= 1.
         self.split_size = test_size
         self._data = download_boston_housing()
         
     @property
     def data(self):
-        if self.split_size:
+        if self.split_size > 0.:
             data_len = self._data[0].shape[0]
             test_split = int(data_len * self.split_size)
             train_split = int(data_len - test_split)

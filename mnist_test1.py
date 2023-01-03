@@ -1,15 +1,14 @@
 """
-    Testing neural network with (relu + sigmoid) + MeanSquaredError.
+    Testing neural network with (leaky_relu + stable_softmax) + CategoricalCrossEntropy.
     No batches.
     acc ~ 97%
 """
 from datasets.mnist import MNIST, normalize_mnist
 
-from nn.dataloader import DataLoader
 from nn.model import Sequential
-from nn.activations import leaky_relu, relu, softmax, tanh, sigmoid
+from nn.activations import leaky_relu, s_softmax
 from nn.layers import Dense
-from nn.loss import MeanSquaredError
+from nn.loss import CrossEntropyLoss
 from nn.optimizer import GradientDescent
 
 from nn.preprocessing import categorical_encoding, transform_input_data
@@ -44,19 +43,14 @@ print('Training shapes')
 print('X_train:', X_train_.shape)
 print('y_train:', y_train_.shape)
 
-# batch_size = 1
-# dl_train = DataLoader(X_train_, y_train_)
-# dl_test = DataLoader(X_test_, y_test)
-# dl_train.batch(batch_size)
-# dl_test.batch(batch_size)
-
 
 nn = Sequential(input_shape=(1, 784),
                 layers=[
-                    Dense(200, activation=relu),
-                    Dense(10, activation=sigmoid)],
-                optimizer=GradientDescent(0.15),
-                loss=MeanSquaredError())
+                    Dense(200, activation=leaky_relu),
+                    Dense(10, activation=s_softmax)
+                    ],
+                optimizer=GradientDescent(0.05),
+                loss=CrossEntropyLoss())
 
 nn.info()
 

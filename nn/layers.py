@@ -68,7 +68,7 @@ class WeightsLayer(Layer):
         dw = (1 / batch_size) * np.dot(dz, self.input.T)
         db = (1 / batch_size) * dz
     
-        new_error = np.sum(dz * self.weights, axis=0).reshape(-1, 1)
+        new_error = np.dot(self.weights.T, dz)
         return new_error, dw, db
     
     def update_params(self, dw: np.ndarray, db: np.ndarray) -> None:

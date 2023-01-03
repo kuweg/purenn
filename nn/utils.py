@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from itertools import pairwise
+from itertools import tee
 from pickletools import optimize
 from typing import Any, Callable, Iterable, List
 import numpy as np
+
 
 
 class rewrapper:
@@ -24,6 +25,11 @@ def set_repr(repr_name: str) -> Callable:
         return rewrapper(repr_name, func)
     return _wrap
 
+
+def pairwise(iterable: Iterable) -> Iterable:
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
 
 def reversed_pairwise(sequence: Iterable) -> list[list]:
     pairwise_sequence = list(pairwise(sequence))

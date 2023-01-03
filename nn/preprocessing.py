@@ -19,6 +19,9 @@ def categorical_encoding(array: Union[np.ndarray, list]) -> np.ndarray:
 
 
 def transform_input_data(array: np.ndarray) -> np.ndarray:
+    """
+    Transforming data from `(N, )` to `(N, 1)`.
+    """
     return np.array(
         list(
             map(
@@ -37,6 +40,17 @@ def normalize(data: np.ndarray) -> np.ndarray:
     :return: scaled arrray with values [0:1]
     :rtype: np.ndarray
     """
+    data = data
+    scaled_data = (data / np.max(data) * 0.99) + 0.01
+    return scaled_data
+
+
+def preprocessing_pipeline(data: np.ndarray) -> np.ndarray:
+    """
+    Preprocessing pipeline.
+    `Normalization -> shape transformation`
+    """
     
-    data = data.astype('float')
-    return (data - np.min(data)) / (np.max(data) - np.min(data))
+    norm_data = normalize(data)
+    transformed_data = transform_input_data(norm_data)
+    return transformed_data

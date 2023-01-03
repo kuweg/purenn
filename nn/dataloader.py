@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from typing import Callable, Iterable, Tuple, List, Union
 
-from nn.utils import dummy_callable
+from .utils import dummy_callable
 
 
 class InputShapeError(Exception):

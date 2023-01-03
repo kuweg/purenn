@@ -65,7 +65,9 @@ class Sigmoid(Activation):
 class Softmax(Activation):
     
     def activation(self, array: np.ndarray) -> np.ndarray:
-        return np.exp(array) / np.sum(np.exp(array), axis=0)
+        numerator = np.exp(array)
+        denominator = np.sum(np.exp(array), axis=0)
+        return numerator / denominator
     
     def df(self, array: np.ndarray) -> np.ndarray:
         I = np.eye(array.shape[0])

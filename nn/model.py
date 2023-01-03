@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
+import json
 from prettytable import PrettyTable
 from typing import Callable, List, Union
 from tqdm import tqdm
 import numpy as np
+import os
+import pickle
 
 from .dataloader import DataLoader, _input_fit_handler
-from .exceptions import IncompleteModelError
+from .exceptions import IncompleteModelError, DirectoryNotFoundError
 from .layers import Layer, WeightsLayer
 from .utils import reversed_pairwise, add_vertical_row
-
-
-WL_PREFIX = "wl{}"
 
 
 class Model(ABC):
@@ -26,16 +26,18 @@ class Model(ABC):
 
 class WeigthCore:
     
+    WL_PREFIX = "wl{}"
+    
     def __init__(self, *args: List[Layer]):
         for order, layer in enumerate(args):
-            setattr(self, WL_PREFIX.format(order), layer)
+            setattr(self, self.WL_PREFIX.format(order), layer)
             
         self.n_layers = order + 1
         
     @property
     def layers(self):
         return [
-                getattr(self, WL_PREFIX.format(layer_number))
+                getattr(self, self.WL_PREFIX.format(layer_number))
                 for layer_number in range(self.n_layers)
                 ]
             
@@ -83,7 +85,8 @@ class Sequential(Model):
         self.weights = _weights_layers_init(self)
         self.optimzier = optimizer
         self.loss = loss
-        self.stat = {}
+        self.stat = {'losses': []}
+        self.model_prefix = np.random.randint(10**5)
         
     def compile(self, optimizer: Callable, loss: Callable) -> None:
         self.optimzier = optimizer
@@ -111,8 +114,6 @@ class Sequential(Model):
         data = _input_fit_handler(X_train, y_train)
             
         self.stat['losses'] = []
-        self.stat['mean_w0'] = []
-        self.stat['mean_w1'] = []
         print('Start training for {} epochs'.format(epochs))
         for e in range(epochs):
             epoch_loss = []
@@ -127,8 +128,6 @@ class Sequential(Model):
                     self.backward(loss)
                     
                     self.stat['losses'].append(epoch_loss)
-                    self.stat['mean_w0'].append(np.mean(self.weights.wl0.weights))
-                    self.stat['mean_w1'].append(np.mean(self.weights.wl1.weights))
                 
                 print('{}: {}'.format(self.loss, stat_loss))
                     
@@ -142,7 +141,43 @@ class Sequential(Model):
                     get_none_parameters(self)
                 )
             )
+
+        
+    def save_layers(self) -> None:
+        """
+        Save layer's properties into a pickle object.
+        Folder's name and file's name a generated automatically
+        based on model's prefix and amount of layers.
+        """
+        save_folder = self.__class__.__name__ + f'_{self.model_prefix}/'
+                    
+        if save_folder not in os.listdir(os.getcwd()):
+            os.mkdir(save_folder)
             
+        for i, layer in enumerate(self.weights.layers):
+            
+            with open(f'{save_folder}layer_{i}.pickle', 'wb') as fh:
+                pickle.dump(layer.__dict__, fh)
+    
+         
+    def load_layers(self, load_path: str) -> None:
+        """
+        Load layer's configuration from pickle files.
+        Provide path to `folder with pickle files`,
+        not path to `pickle files`.
+        """
+        if load_path[:-1] not in os.listdir(os.getcwd()):
+            raise DirectoryNotFoundError(
+                f'Specified directory {load_path} is not found\n' +
+                'Perhaps you may forgot to save model before attempting to load it.'
+            )
+            
+        for i, layer in enumerate(self.weights.layers):
+            
+            with open(f'{load_path}layer_{i}.pickle', 'rb') as fh:
+                self.weights.layers[i].__dict__ = pickle.load(fh)
+
+
     def info(self) -> None:
         desc = PrettyTable()
         model_name = 'model: {}'.format(self.__class__.__name__)
