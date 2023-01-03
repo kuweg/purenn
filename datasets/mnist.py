@@ -157,8 +157,19 @@ def get_missing_urls(required_files: List[str]) -> list[str]:
     return required_urls
 
 
+def normalize_mnist(data: np.ndarray) -> np.ndarray:
+    """
+    Scaling values to [0.01 .. 1].
+    Left border is 0.01 for preventing vanishing gradient problem.
+    """
+    data = data.astype('float')
+    scaled_data = (data / 255. * 0.99) + 0.01
+    return scaled_data
+
+
 class MNISTModeException(Exception):
     pass
+
 
 class MNIST:
     """

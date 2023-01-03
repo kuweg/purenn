@@ -1,9 +1,9 @@
 import numpy as np
-from typing import Any, Callable
+from typing import Any, Callable, Union
 from numbers import Number
 
 
-def _shape_checking(*args) -> Number | tuple:
+def _shape_checking(*args) -> Union[Number, tuple]:
     if len(args) == 1:
         return int(args[0])
     return tuple(map(int, args))
@@ -18,15 +18,15 @@ class Weights:
         return np.random.randn(*shape) / np.sqrt(shape[0])
 
     @staticmethod
-    def zeros(shape: int | tuple) -> np.ndarray:
+    def zeros(shape: Union[int, tuple]) -> np.ndarray:
         return np.zeros(shape)
     
     @staticmethod
-    def ones(shape: int | tuple) -> np.ndarray:
+    def ones(shape: Union[int, tuple]) -> np.ndarray:
         return np.ones(shape)
 
     @staticmethod
-    def rand(shape: int | tuple) -> np.ndarray:
+    def rand(shape: Union[int, tuple]) -> np.ndarray:
 
         if isinstance(shape, tuple):
             return np.random.randn(*shape)
